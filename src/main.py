@@ -1,14 +1,6 @@
-from pathlib import Path
 from geopandas import gpd
 
-
-PATH_TO_GPGK = (
-    Path(__file__).parent.parent
-    / "USGS_DR-1210_full-db_V1"
-    / "ngs_full_2025_v1"
-    / "ngs_full_2025_v1-database"
-    / "ngs_full_2025_v1.gpkg"
-)
+from lib import download_if_not_exists
 
 
 def main():
@@ -52,7 +44,10 @@ def main():
         "assignments_age",
         "assignments_lithology",
     ]
-    assert columns == gpd.list_layers(PATH_TO_GPGK).to_dict(orient="list")["name"]
+
+    path_to_gpkg = download_if_not_exists()
+
+    assert columns == gpd.list_layers(path_to_gpkg).to_dict(orient="list")["name"]
 
 
 if __name__ == "__main__":

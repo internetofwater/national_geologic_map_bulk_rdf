@@ -1,3 +1,6 @@
 USGS_DR-1210_full-db_V1
 .DS_Store
 .venv/
+
+__pycache__/
+
