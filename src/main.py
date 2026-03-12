@@ -1,8 +1,10 @@
+
+# %%
 from geopandas import gpd
 
 from lib import download_if_not_exists
 
-
+# %%
 def main():
     columns = [
         "source_mapsourcepolys",
@@ -52,3 +54,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# %%
