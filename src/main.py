@@ -6,7 +6,7 @@ from lib import download_if_not_exists
 
 # %%
 def main():
-    columns = [
+    layers = [
         "source_mapsourcepolys",
         "source_mapunitpolys",
         "source_overlaypolys",
@@ -49,7 +49,7 @@ def main():
 
     path_to_gpkg = download_if_not_exists()
 
-    assert columns == gpd.list_layers(path_to_gpkg).to_dict(orient="list")["name"]
+    assert layers == gpd.list_layers(path_to_gpkg).to_dict(orient="list")["name"]
 
 
 if __name__ == "__main__":
