@@ -12,15 +12,15 @@ def main():
 
     files = download_if_not_exists()
 
-    for file in files:
+    for name, path in files.items():
         sql_query = """
         SELECT * FROM MapUnitPolys
         """
 
 
-        polys = gpd.read_file(file, sql=sql_query)
+        polys = gpd.read_file(path, sql=sql_query)
 
-        geologic_data = gpd.read_file(file, layer="Source_DescriptionOfMapUnits")
+        geologic_data = gpd.read_file(path, layer="Source_DescriptionOfMapUnits")
 
         df = polys.merge(geologic_data, on="Source_MapUnit", how="left")
 

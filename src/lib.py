@@ -47,7 +47,7 @@ def download_if_not_exists() -> dict[str, Path]:
         zip_path = GEOLOGY_MAP_DATA_DIR / f"{name}.zip"
         extract_dir = GEOLOGY_MAP_DATA_DIR / name
 
-        if zip_path.exists():
+        if zip_path.exists() or extract_dir.exists():
             LOGGER.info(f"Skipping downloading {name} since it already exists")
         else:     
             _download_file(url, zip_path)
@@ -67,7 +67,8 @@ def download_if_not_exists() -> dict[str, Path]:
         gdb_paths[name] = gdb_dirs[0]
 
         # delete the zip file since it is no longer needed
-        zip_path.unlink()
+        if zip_path.exists():
+            zip_path.unlink()
 
     if not gdb_paths:
         raise RuntimeError("No GDBs were found after extraction")
