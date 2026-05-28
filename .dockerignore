@@ -5,3 +5,7 @@
 **/geology_map
 
 **/*.gdb
+
+**/data/**
+
+**/.venv/
