@@ -8,6 +8,7 @@ from zipfile import ZipFile
 import pandas as pd
 
 import requests
+
 logging.basicConfig(level=logging.INFO)
 LOGGER = logging.getLogger(__name__)
 
@@ -122,33 +123,31 @@ def row_to_jsonld(row: Mapping[str, object], source_name: str):
         "identifier": identifier,
         "gsp:hasGeometry": {
             "@type": "http://www.opengis.net/ont/sf#Polygon",
-            "gsp:asWKT": {"@type": "gsp:wktLiteral", "@value": shapely_obj.wkt}, # pyright: ignore[reportAttributeAccessIssue]
+            "gsp:asWKT": {"@type": "gsp:wktLiteral", "@value": shapely_obj.wkt},  # pyright: ignore[reportAttributeAccessIssue]
             "gsp:crs": {"@id": "http://www.opengis.net/def/crs/OGC/1.3/CRS84"},
         },
         "name": name,
-        "variableMeasured": []
+        "variableMeasured": [],
     }
     description = row.get("Description")
     if (
         description is not None
-        and not pd.isna(description) # type: ignore
+        and not pd.isna(description)  # type: ignore
         and str(description).strip().lower() not in {"none", "nan", ""}
     ):
         document["description"] = str(description)
 
     for column in OPTIONAL_COLUMNS:
-        # name is a special case; we don't really 
+        # name is a special case; we don't really
         # want to include this as a variableMeasured
         # but it is nonetheless an optional column
         if column == "name":
             continue
         value = row.get(column)
         if value is None:
-            continue 
-        document["variableMeasured"].append({
-            "@type": "PropertyValue",
-            "name": column,
-            "value": value
-        })
+            continue
+        document["variableMeasured"].append(
+            {"@type": "PropertyValue", "name": column, "value": value}
+        )
 
     return document

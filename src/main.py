@@ -33,7 +33,6 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-
 def main() -> None:
     args = parse_args()
 
@@ -77,6 +76,7 @@ def main() -> None:
             print(json.dumps(jsonld, ensure_ascii=False, separators=(",", ":")))
             rows_emitted += 1
         LOGGER.info(f"Finished templating {name} with {rows_emitted} rows")
+
 
 if __name__ == "__main__":
     main()
