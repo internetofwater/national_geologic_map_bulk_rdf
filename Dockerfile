@@ -1,3 +1,6 @@
+# Copyright 2026 Lincoln Institute of Land Policy
+# SPDX-License-Identifier: MIT
+
 # First, build the application in the `/app` directory.
 # See `Dockerfile` for details.
 FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS builder

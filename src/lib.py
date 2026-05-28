@@ -1,11 +1,32 @@
-from pathlib import Path
-import requests
-from zipfile import ZipFile
-import logging
+# Copyright 2026 Lincoln Institute of Land Policy
+# SPDX-License-Identifier: MIT
 
+import logging
+from collections.abc import Mapping
+from pathlib import Path
+from zipfile import ZipFile
+import pandas as pd
+
+import requests
 logging.basicConfig(level=logging.INFO)
 LOGGER = logging.getLogger(__name__)
 
+REQUIRED_COLUMNS = {"FullName", "geometry", "MapUnitPolys_ID", "Description"}
+
+OPTIONAL_COLUMNS = {
+    "MapUnit",
+    "Name",
+    "Age",
+    "GeoMaterial",
+    "GeoMaterialConfidence",
+    "IdentityConfidence",
+    "Symbol_poly",
+    "DataSourceID",
+    "MapSourceID",
+    "Source_MapUnit",
+}
+
+COLUMNS_TO_KEEP = REQUIRED_COLUMNS | OPTIONAL_COLUMNS
 
 GEOLOGY_MAP_DATA_DIR = Path(__file__).parent / "data"
 
@@ -17,7 +38,7 @@ GDB_URLS = {
 }
 
 
-def _download_file(url: str, out_path: Path):
+def _download_file(url: str, out_path: Path) -> None:
     if out_path.exists():
         return
 
@@ -31,7 +52,7 @@ def _download_file(url: str, out_path: Path):
     LOGGER.info("Download complete.")
 
 
-def _extract_zip(zip_path: Path, extract_to: Path):
+def _extract_zip(zip_path: Path, extract_to: Path) -> None:
     LOGGER.info(f"Extracting {zip_path} → {extract_to}")
     with ZipFile(zip_path, "r") as zf:
         zf.extractall(extract_to)
@@ -49,7 +70,7 @@ def download_if_not_exists() -> dict[str, Path]:
 
         if zip_path.exists() or extract_dir.exists():
             LOGGER.info(f"Skipping downloading {name} since it already exists")
-        else:     
+        else:
             _download_file(url, zip_path)
 
         # Extract if needed
@@ -76,4 +97,58 @@ def download_if_not_exists() -> dict[str, Path]:
     return gdb_paths
 
 
-def row_to_jsonld(): ...
+def row_to_jsonld(row: Mapping[str, object], source_name: str):
+    polygon_id = row.get("MapUnitPolys_ID")
+
+    if not isinstance(polygon_id, str):
+        raise ValueError("MapUnitPolys_ID is required for JSON-LD identifiers")
+
+    identifier = f"{source_name}:{polygon_id}"
+
+    # base geometry
+    shapely_obj = row.get("geometry")
+    assert shapely_obj is not None
+
+    name = row.get("FullName")
+    assert name, "FullName is required for JSON-LD names"
+
+    document = {
+        "@context": {
+            "@vocab": "https://schema.org/",
+            "gsp": "http://www.opengis.net/ont/geosparql#",
+        },
+        "@id": f"https://geoconnex.us/usgs/national-geologic-map/{identifier}",
+        "@type": "Place",
+        "identifier": identifier,
+        "gsp:hasGeometry": {
+            "@type": "http://www.opengis.net/ont/sf#Polygon",
+            "gsp:asWKT": {"@type": "gsp:wktLiteral", "@value": shapely_obj.wkt}, # pyright: ignore[reportAttributeAccessIssue]
+            "gsp:crs": {"@id": "http://www.opengis.net/def/crs/OGC/1.3/CRS84"},
+        },
+        "name": name,
+        "variableMeasured": []
+    }
+    description = row.get("Description")
+    if (
+        description is not None
+        and not pd.isna(description) # type: ignore
+        and str(description).strip().lower() not in {"none", "nan", ""}
+    ):
+        document["description"] = str(description)
+
+    for column in OPTIONAL_COLUMNS:
+        # name is a special case; we don't really 
+        # want to include this as a variableMeasured
+        # but it is nonetheless an optional column
+        if column == "name":
+            continue
+        value = row.get(column)
+        if value is None:
+            continue 
+        document["variableMeasured"].append({
+            "@type": "PropertyValue",
+            "name": column,
+            "value": value
+        })
+
+    return document

@@ -37,7 +37,7 @@ jobs:
           context: .
           file: Dockerfile
           push: true
-          tags: ghcr.io/internetofwater/usgs_monitoring_locations_bulk_rdf:latest
-          cache-from: type=gha,scope=usgs_monitoring_locations_bulk_rdf
+          tags: ghcr.io/internetofwater/usgs_national_geologic_map_bulk_rdf:latest
+          cache-from: type=gha,scope=usgs_national_geologic_map_bulk_rdf
           platforms: linux/amd64,linux/arm64
-          cache-to: type=gha,mode=max,scope=usgs_monitoring_locations_bulk_rdf
+          cache-to: type=gha,mode=max,scope=usgs_national_geologic_map_bulk_rdf
