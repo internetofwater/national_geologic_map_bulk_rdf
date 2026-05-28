@@ -1,54 +1,78 @@
 from pathlib import Path
 import requests
 from zipfile import ZipFile
+import logging
 
-PATH_TO_GPGK = (
-    Path(__file__).parent.parent
-    / "USGS_DR-1210_full-db_V1"
-    / "ngs_full_2025_v1"
-    / "ngs_full_2025_v1-database"
-    / "ngs_full_2025_v1.gpkg"
-)
+logging.basicConfig(level=logging.INFO)
+LOGGER = logging.getLogger(__name__)
 
 
-def download_if_not_exists() -> Path:
-    if PATH_TO_GPGK.exists():
-        return PATH_TO_GPGK
+GEOLOGY_MAP_DATA_DIR = Path(__file__).parent / "data"
 
-    url = "https://ngmdb.usgs.gov/docs/gis/USGS_DR-1210_full-db_V1.zip"
-    zip_path = PATH_TO_GPGK.parent.parent.parent / "USGS_DR-1210_full-db_V1.zip"
+GDB_URLS = {
+    "earth_surface_geology": "https://ngmdb.usgs.gov/ngm-bin/gems_download.pl?id=3436&pid=118545",
+    "quaternary_geology": "https://ngmdb.usgs.gov/ngm-bin/gems_download.pl?id=3437&pid=118545",
+    "pre-quaternary_geology": "https://ngmdb.usgs.gov/ngm-bin/gems_download.pl?id=3438&pid=118545",
+    "precambrian_geology": "https://ngmdb.usgs.gov/ngm-bin/gems_download.pl?id=3598&pid=118545",
+}
 
-    # Ensure parent directories exist
-    zip_path.parent.mkdir(parents=True, exist_ok=True)
 
-    # Stream download to file
-    if not zip_path.exists():
-        print(f"Downloading {url} to {zip_path} ...")
-        with requests.get(url, stream=True) as r:
-            r.raise_for_status()
-            with open(zip_path, "wb") as f:
-                for chunk in r.iter_content(chunk_size=1024 * 1024):  # 1 MB chunks
-                    if chunk:
-                        f.write(chunk)
-        print("Download complete.")
+def _download_file(url: str, out_path: Path):
+    if out_path.exists():
+        return
 
-    # Extract only the .gpkg file
-    print(f"Extracting .gpkg from {zip_path} ...")
+    LOGGER.info(f"Downloading {url} → {out_path}")
+    with requests.get(url, stream=True) as r:
+        r.raise_for_status()
+        with open(out_path, "wb") as f:
+            for chunk in r.iter_content(chunk_size=1024 * 1024):
+                if chunk:
+                    f.write(chunk)
+    LOGGER.info("Download complete.")
+
+
+def _extract_zip(zip_path: Path, extract_to: Path):
+    LOGGER.info(f"Extracting {zip_path} → {extract_to}")
     with ZipFile(zip_path, "r") as zf:
-        for file_info in zf.infolist():
-            if file_info.filename.endswith(".gpkg"):
-                # Extract to the expected folder
-                target_dir = PATH_TO_GPGK.parent
-                target_dir.mkdir(parents=True, exist_ok=True)
-                zf.extract(file_info, target_dir.parent.parent.parent)
-                break
-        else:
-            raise FileNotFoundError(".gpkg file not found in the zip")
+        zf.extractall(extract_to)
+    LOGGER.info("Extraction complete.")
 
-    if not PATH_TO_GPGK.exists():
-        raise FileNotFoundError(f"Failed to extract {PATH_TO_GPGK}")
 
-    print(f"Data ready at {PATH_TO_GPGK}")
-    return PATH_TO_GPGK
+def download_if_not_exists() -> dict[str, Path]:
+    GEOLOGY_MAP_DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+    gdb_paths: dict[str, Path] = {}
+
+    for name, url in GDB_URLS.items():
+        zip_path = GEOLOGY_MAP_DATA_DIR / f"{name}.zip"
+        extract_dir = GEOLOGY_MAP_DATA_DIR / name
+
+        if zip_path.exists():
+            LOGGER.info(f"Skipping downloading {name} since it already exists")
+        else:     
+            _download_file(url, zip_path)
+
+        # Extract if needed
+        if not extract_dir.exists():
+            _extract_zip(zip_path, extract_dir)
+
+        # Find the .gdb folder
+        gdb_dirs = list(extract_dir.rglob("*.gdb"))
+        if not gdb_dirs:
+            raise FileNotFoundError(f"No .gdb found in {extract_dir}")
+
+        assert len(gdb_dirs) == 1, "More than one .gdb found"
+
+        # Usually one per archive, but handle safely
+        gdb_paths[name] = gdb_dirs[0]
+
+        # delete the zip file since it is no longer needed
+        zip_path.unlink()
+
+    if not gdb_paths:
+        raise RuntimeError("No GDBs were found after extraction")
+
+    return gdb_paths
+
 
 def row_to_jsonld(): ...
