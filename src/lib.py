@@ -144,7 +144,7 @@ def row_to_jsonld(row: Mapping[str, object], source_name: str):
         if column == "name":
             continue
         value = row.get(column)
-        if value is None or value == "" or pd.isna(value):   # type: ignore
+        if value is None or value == "" or pd.isna(value):  # type: ignore
             continue
         document["variableMeasured"].append(
             {"@type": "PropertyValue", "name": column, "value": value}
