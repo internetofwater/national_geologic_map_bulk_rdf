@@ -98,7 +98,7 @@ def download_if_not_exists() -> dict[str, Path]:
     return gdb_paths
 
 
-def row_to_jsonld(row: Mapping[str, object], source_name: str):
+def row_to_jsonld(row: Mapping[str, object], source_name: str) -> dict | None:
     polygon_id = row.get("MapUnitPolys_ID")
 
     if not isinstance(polygon_id, str):
@@ -111,7 +111,11 @@ def row_to_jsonld(row: Mapping[str, object], source_name: str):
     assert shapely_obj is not None
 
     name = row.get("FullName")
-    assert name, "FullName is required for JSON-LD names"
+    if name is None or pd.isna(name) or (isinstance(name, str) and not name.strip()):  # type: ignore
+        LOGGER.warning(
+            f"Skipping row with missing FullName (MapUnitPolys_ID={polygon_id!r}, source={source_name!r})"
+        )
+        return None
 
     document = {
         "@context": {

@@ -73,6 +73,8 @@ def main() -> None:
                 return
             row = dict(zip(columns, values, strict=True))
             jsonld = row_to_jsonld(row, name)
+            if jsonld is None:
+                continue
             print(json.dumps(jsonld, ensure_ascii=False, separators=(",", ":")))
             rows_emitted += 1
         LOGGER.info(f"Finished templating {name} with {rows_emitted} rows")
