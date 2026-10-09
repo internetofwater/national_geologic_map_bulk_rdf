@@ -32,10 +32,10 @@ COLUMNS_TO_KEEP = REQUIRED_COLUMNS | OPTIONAL_COLUMNS
 GEOLOGY_MAP_DATA_DIR = Path(__file__).parent / "data"
 
 GDB_URLS = {
-    "earth_surface_geology": "https://ngmdb.usgs.gov/ngm-bin/gems_download.pl?id=3436&pid=118545",
-    "quaternary_geology": "https://ngmdb.usgs.gov/ngm-bin/gems_download.pl?id=3437&pid=118545",
-    "pre-quaternary_geology": "https://ngmdb.usgs.gov/ngm-bin/gems_download.pl?id=3438&pid=118545",
-    "precambrian_geology": "https://ngmdb.usgs.gov/ngm-bin/gems_download.pl?id=3598&pid=118545",
+    "earth_surface_geology": "https://ngmdb.usgs.gov/ngm-bin/gems_download.pl?id=4894&pid=118545",
+    "quaternary_geology": "https://ngmdb.usgs.gov/ngm-bin/gems_download.pl?id=4893&pid=118545",
+    "pre-quaternary_geology": "https://ngmdb.usgs.gov/ngm-bin/gems_download.pl?id=4892&pid=118545",
+    "precambrian_geology": "https://ngmdb.usgs.gov/ngm-bin/gems_download.pl?id=4891&pid=118545",
 }
 
 
