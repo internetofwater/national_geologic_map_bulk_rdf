@@ -4,10 +4,13 @@
 import argparse
 import json
 import logging
+import sys
 
 import geopandas as gpd
 
 from lib import COLUMNS_TO_KEEP, download_if_not_exists, row_to_jsonld
+
+sys.stdout.reconfigure(line_buffering=True)  # type: ignore[union-attr]
 
 logging.basicConfig(level=logging.INFO)
 LOGGER = logging.getLogger(__name__)

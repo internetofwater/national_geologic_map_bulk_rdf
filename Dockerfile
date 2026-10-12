@@ -34,4 +34,4 @@ COPY --from=builder --chown=app:app /app /app
 # Place executables in the environment at the front of the path
 ENV PATH="/app/.venv/bin:$PATH"
 
-ENTRYPOINT ["python", "/app/src/main.py"]
+ENTRYPOINT ["python", "-u", "/app/src/main.py"]
